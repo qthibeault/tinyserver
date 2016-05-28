@@ -5,6 +5,8 @@ int main(int argc, char *argv[])
 {
     int port = 80;
     
+    
+    /* Parse argument flags */
     int i;
     for(i = 1; i < argc - 1; ++i){
         char *arg = argv[i];

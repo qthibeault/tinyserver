@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "logging.h"
+
 int main(int argc, char *argv[])
 {
     int port = 80;
@@ -19,6 +21,6 @@ int main(int argc, char *argv[])
         }
     }
     
-    printf("Bringing server online on port %d\n", port);
+    log_print(INFO, "Bringing up server on port: %d", port);
     return 0;
 }

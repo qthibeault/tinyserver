@@ -1,4 +1,7 @@
 CC=clang
 
-all: 
-	$(CC) src/main.c -o server
+all: src/*.c 
+	$(CC) -I ./include src/*.c -o server
+
+clean:
+	rm server

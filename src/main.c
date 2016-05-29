@@ -8,22 +8,21 @@
 
 #include "logging.h"
 
-int create_socket(int port)
+int create_socket()
 {
-    int sockfd;
-    struct sockaddr_in serv_addr;
+    return socket(AF_INET, SOCK_STREAM, 0);
+}
+
+int bind_socket(int socket_fd, int port)
+{
+    struct sockaddr_in sock_addr;
+    memset(&sock_addr, '0', sizeof(sock_addr));
     
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-        return sockfd;
+    sock_addr.sin_family = AF_INET;
+    sock_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    sock_addr.sin_port = htons(port);
     
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = port;
-    
-    return bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
+    return bind(socket_fd, (struct sockaddr*) &sock_addr, sizeof(sock_addr));
 }
 
 int main(int argc, char *argv[])
@@ -43,29 +42,37 @@ int main(int argc, char *argv[])
         }
     }
     
-    /* Create Server */
-    int server = create_socket(port);
-    if (server < 0) {
-        log_print(ERROR, "Could not create socket on port %d", port);
+    /* Create server socket */
+    int srv_sock = create_socket();
+    if (srv_sock < 0) {
+        log_print(ERROR, "Could not create server socket");
+        exit(-1);
+    }
+    
+    if (bind_socket(srv_sock, port) < 0) {
+        log_print(ERROR, "Could not bind server socket");
         exit(-1);
     }
     
     /* Tell server to start listening */
-    listen(server, 10);
-    log_print(INFO, "Created socket on port: %d", port);
+    listen(srv_sock, 3);
+    log_print(INFO, "Server online at port: %d", port);
+    log_print(INFO, "Waiting for connection...");
     
-    int conn;
-    char buffer[256];
-    while (1) {
-        conn = accept(server, (struct sockaddr*)NULL, NULL);
-        printf("Opened connection");
-        
-        snprintf(buffer, sizeof(buffer), "Connection recieved");
-        write(conn, buffer, strlen(buffer));
-        
-        close(conn);
-        sleep(1);
+    /* Create client socket fd */
+    int sockfd;
+    int c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+    
+    /* Listen for connection */
+    sockfd = accept(srv_sock, (struct sockaddr *) &client, (socklen_t *) &c);
+    if (sockfd < 0) {
+        log_print(ERROR, "Problem establishing connection");
+        exit(-1);
     }
     
+    log_print(INFO, "Connection successfully established");
+    
+    log_print(INFO, "Shutting down server");
     return 0;
 }

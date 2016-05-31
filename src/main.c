@@ -8,6 +8,10 @@
 
 #include "logging.h"
 
+enum status {
+    OK
+} status_codes;
+
 int create_socket()
 {
     return socket(AF_INET, SOCK_STREAM, 0);
@@ -23,6 +27,21 @@ int bind_socket(int socket_fd, int port)
     sock_addr.sin_port = htons(port);
     
     return bind(socket_fd, (struct sockaddr*) &sock_addr, sizeof(sock_addr));
+}
+
+char* build_response(int status, char *msg)
+{
+    
+    int c;
+    int status_codes[] = { 200 };
+    char *status_str[] = { "OK" };
+    
+    char *response = malloc(sizeof(char) * 256);
+    
+    c = snprintf(response, 256, "HTTP/1.1 %d %s\n", status_codes[status], status_str[status]);
+    c = snprintf(response + c, 256 - c, "\n%s\n", msg);
+    
+    return response;
 }
 
 int main(int argc, char *argv[])
@@ -74,7 +93,8 @@ int main(int argc, char *argv[])
     log_print(INFO, "Connection successfully established");
     
     /* HTTP Response */
-    const char* msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World";
+    char *msg = build_response(OK, "Hello World");
+    log_print(INFO, "Build Response: %s", msg);
     write(sockfd, msg, strlen(msg));
     
     log_print(INFO, "Shutting down server");

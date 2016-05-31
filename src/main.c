@@ -73,6 +73,10 @@ int main(int argc, char *argv[])
     
     log_print(INFO, "Connection successfully established");
     
+    /* HTTP Response */
+    const char* msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World";
+    write(sockfd, msg, strlen(msg));
+    
     log_print(INFO, "Shutting down server");
     return 0;
 }

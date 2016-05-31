@@ -92,10 +92,17 @@ int main(int argc, char *argv[])
     
     log_print(INFO, "Connection successfully established");
     
+    /* Parse HTTP Request */
+    char request[256];
+    if (recv(sockfd, request, sizeof(request), 0) < 0) {
+        log_print(ERROR, "Could not read request");
+    }
+    log_print(INFO, "Got request %s", request);
+    
+    
     /* HTTP Response */
-    char *msg = build_response(OK, "Hello World");
-    log_print(INFO, "Build Response: %s", msg);
-    write(sockfd, msg, strlen(msg));
+    char *response = build_response(OK, "Hello World");
+    write(sockfd, response, strlen(response));
     
     log_print(INFO, "Shutting down server");
     return 0;

@@ -97,8 +97,10 @@ int main(int argc, char *argv[])
     if (recv(sockfd, request, sizeof(request), 0) < 0) {
         log_print(ERROR, "Could not read request");
     }
-    log_print(INFO, "Got request %s", request);
+    char *method = strtok(request, " ");
+    char *path = strtok(NULL, " ");
     
+    log_print(INFO, "Request Method: %s Request Path: %s", method, path);
     
     /* HTTP Response */
     char *response = build_response(OK, "Hello World");

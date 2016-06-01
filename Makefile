@@ -1,7 +1,7 @@
 CC=clang
 
 all: src/*.c 
-	$(CC) -I ./include src/*.c -o server
+	$(CC) -lpthread -I ./include src/*.c -o server
 
 clean:
 	rm server

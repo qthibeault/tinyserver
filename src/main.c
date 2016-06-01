@@ -45,6 +45,27 @@ char* build_response(int status, char *msg)
     return response;
 }
 
+void *handler(void *sockfd)
+{
+    int sock = *(int*) sockfd;
+    /* Parse HTTP Request */
+    char request[256];
+    if (recv(sock, request, sizeof(request), 0) < 0) {
+        log_print(ERROR, "Could not read request");
+    }
+    char *method = strtok(request, " ");
+    char *path = strtok(NULL, " ");
+    
+    log_print(INFO, "Request Method: %s Request Path: %s", method, path);
+    
+    /* HTTP Response */
+    char *response = build_response(OK, "Hello World");
+    write(sock, response, strlen(response));
+    
+    close(sock);
+    free(sockfd);
+}
+
 int main(int argc, char *argv[])
 {
     int port = 80;
@@ -85,27 +106,21 @@ int main(int argc, char *argv[])
     struct sockaddr_in client;
     
     /* Listen for connection */
-    sockfd = accept(srv_sock, (struct sockaddr *) &client, (socklen_t *) &c);
+    while( (sockfd = accept(srv_sock, (struct sockaddr *) &client, (socklen_t *) &c)) ) {
+        pthread_t thread_id;
+        int *new_sock = malloc(sizeof(int));
+        *new_sock = sockfd;
+        
+        if(pthread_create(&thread_id, NULL, handler, (void *) new_sock) < 0) {
+            log_print(ERROR, "Could not create pthread for connection");
+            exit(-1);
+        }
+    }
+    
     if (sockfd < 0) {
         log_print(ERROR, "Problem establishing connection");
         exit(-1);
     }
-    
-    log_print(INFO, "Connection successfully established");
-    
-    /* Parse HTTP Request */
-    char request[256];
-    if (recv(sockfd, request, sizeof(request), 0) < 0) {
-        log_print(ERROR, "Could not read request");
-    }
-    char *method = strtok(request, " ");
-    char *path = strtok(NULL, " ");
-    
-    log_print(INFO, "Request Method: %s Request Path: %s", method, path);
-    
-    /* HTTP Response */
-    char *response = build_response(OK, "Hello World");
-    write(sockfd, response, strlen(response));
     
     log_print(INFO, "Shutting down server");
     return 0;

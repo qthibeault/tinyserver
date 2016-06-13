@@ -9,10 +9,11 @@
 
 int main(int argc, char* argv[])
 {
-    int port = 8080, sock_desc;
-    struct sockaddr_in server;
+    int port = 8080, sock_desc, client_desc;
+    socklen_t client_size;
+    struct sockaddr_in server, client;
     
-    sock_desc = socket(AF_INET, SOCK_STREAM, 0);
+    sock_desc = socket(PF_INET, SOCK_STREAM, 0);
     if (sock_desc < 0) {
         log_print(ERROR, "Could not create socket");
         return -1;
@@ -30,6 +31,13 @@ int main(int argc, char* argv[])
     listen(sock_desc, 3);
     
     log_print(INFO, "Server online at port %d", port);
+    log_print(INFO, "Awaiting incoming connection...");
+    
+    client_size = sizeof(client_desc);
+    client_desc = accept(sock_desc, (struct sockaddr*)&client, &client_size);
+    
+    char *msg = "HTTP/1.1 200 OK/nContent-Type:text/plain\n\nHello World\n";
+    send(client_desc, msg, strlen(msg), 0);
     
     return 0;
 }

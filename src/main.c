@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
     
     char *msg = "HTTP/1.1 200 OK/nContent-Type:text/plain\n\nHello World\n";
     send(client_desc, msg, strlen(msg), 0);
+    
+    close(client_desc);
+    close(sock_desc);
     
     return 0;
 }

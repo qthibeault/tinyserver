@@ -1,0 +1,4 @@
+langauge: c
+compiler: clang
+
+script: make all

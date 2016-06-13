@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
         log_print(ERROR, "Could not bind socket to port");
         return -1;
     }
+    listen(sock_desc, 3);
     
     log_print(INFO, "Server online at port %d", port);
     

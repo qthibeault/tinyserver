@@ -8,16 +8,19 @@
 
 #include "logging.h"
 
+#define D_PORT 8080
+
 int main(int argc, char* argv[])
 {
-    int port = 8080, sock_desc, client_desc;
+    int port = D_PORT;
+    int sock_desc, client_desc;
     socklen_t client_size;
     struct sockaddr_in server, client;
     
     sock_desc = socket(PF_INET, SOCK_STREAM, 0);
     if (sock_desc < 0) {
         log_print(ERROR, "Could not create socket");
-        return -1;
+        exit(1);
     }
     
     memset(&server, 0, sizeof(server));
@@ -27,19 +30,18 @@ int main(int argc, char* argv[])
     
     if (bind(sock_desc, (struct sockaddr *)&server, sizeof(struct sockaddr_in)) < 0) {
         log_print(ERROR, "Could not bind socket to port");
-        return -1;
+        exit(1);
     }
     listen(sock_desc, 3);
     
     log_print(INFO, "Server online at port %d", port);
-    log_print(INFO, "Awaiting incoming connection...");
-    
+
     client_size = sizeof(client_desc);
     client_desc = accept(sock_desc, (struct sockaddr*)&client, &client_size);
     
-    char *msg = "HTTP/1.1 200 OK/nContent-Type:text/plain\n\nHello World\n";
+    char *msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World\n";
     send(client_desc, msg, strlen(msg), 0);
-    
+
     close(client_desc);
     close(sock_desc);
     

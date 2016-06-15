@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
     socklen_t client_size;
     struct sockaddr_in server;
     struct sockaddr_storage client;
+    pid_t pid;
 
     if (argc > 1) {
         port = atoi(argv[1]);
@@ -49,21 +50,23 @@ int main(int argc, char* argv[])
         inet_ntop(client.ss_family, &((struct sockaddr_in*)&client)->sin_addr, s, sizeof s);
         log_print(INFO, "Accepted connection from %s", s);
 
-        pid_t pid = fork();
-        if (pid != 0) {
-            log_print(INFO, "Forked child process %d to handle request", pid);
+        if((pid = fork()) < 0) {
+            log_print(ERROR, "could not fork");
         }
-        else{
-            pid = getpid();
-            log_print(INFO, "I am  forked child process number %d", pid);
-            close(sock_desc);
-            
-            char *msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World\n";
-            send(client_desc, msg, strlen(msg), 0);
-            
-            close(client_desc);
-            log_print(INFO, "Child process number %d going offline", pid);
-            exit(0);
+        else {
+            if (pid == 0) {
+                close(sock_desc);
+                
+                write(client_desc, "HTTP/1.1 200 OK\n", 16);
+                write(client_desc, "Content-length: 46\n", 19);
+                write(client_desc, "Content-Type: text/html\n\n", 25);
+                write(client_desc, "<html><body><H1>Hello world</H1></body></html>", 46);
+                
+                exit(1);
+            }
+            else {
+                close(client_desc);
+            }
         }
     }
 

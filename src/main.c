@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -15,7 +16,8 @@ int main(int argc, char* argv[])
     int port = D_PORT;
     int sock_desc, client_desc;
     socklen_t client_size;
-    struct sockaddr_in server, client;
+    struct sockaddr_in server;
+    struct sockaddr_storage client;
     
     sock_desc = socket(PF_INET, SOCK_STREAM, 0);
     if (sock_desc < 0) {
@@ -33,17 +35,27 @@ int main(int argc, char* argv[])
         exit(1);
     }
     listen(sock_desc, 3);
-    
     log_print(INFO, "Server online at port %d", port);
+    log_print(INFO, "Awaiting incoming connections...");
 
     client_size = sizeof(client_desc);
-    client_desc = accept(sock_desc, (struct sockaddr*)&client, &client_size);
-    
-    char *msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World\n";
-    send(client_desc, msg, strlen(msg), 0);
+    while ((client_desc = accept(sock_desc, (struct sockaddr*)&client, &client_size)))
+    {
+        char s[15];
+        inet_ntop(client.ss_family, &((struct sockaddr_in*)&client)->sin_addr, s, sizeof s);
+        log_print(INFO, "Accepted connection from %s", s);
+        
+        char *msg = "HTTP/1.1 200 OK\nContent-Type:text/plain\n\nHello World\n";
+        send(client_desc, msg, strlen(msg), 0);
+    }
+
+    if(client_desc < 0) {
+        close(sock_desc);
+        log_print(ERROR, "Could not accept connection");
+        exit(1);
+    }
 
     close(client_desc);
     close(sock_desc);
-    
-    return 0;
+    exit(0);
 }

@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
                 }
 
                 free(fname);
+                close(client_desc);
                 exit(1);
             }
             else {

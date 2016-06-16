@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include "logging.h"
 
@@ -64,6 +65,11 @@ int main(int argc, char* argv[])
 
                 char *fname = malloc(sizeof(char) * (strlen(path) + 2));
                 strcat(strcpy(fname, "."), path);
+                struct stat sb;
+                if (stat(fname, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+                    fname = realloc(fname, sizeof(char) * (strlen(fname) + 11));
+                    strcat(fname, "index.html");
+                }
 
                 log_print(INFO, "Attempting to serve file: %s", fname);
                 

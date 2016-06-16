@@ -76,10 +76,25 @@ int main(int argc, char* argv[])
                 }
                 
                 if (access(fname, F_OK) != -1) {
+                    FILE *fp = fopen(fname, "rb");
+                    fseek(fp, 0, SEEK_END);
+                    long fsize = ftell(fp);
+                    rewind(fp);
+
+                    char *body = malloc(fsize + 1);
+                    fread(body, fsize, 1, fp);
+                    fclose(fp);
+                    
+                    body[fsize] = 0;
+                    int length_header_size = snprintf(NULL, 0, "Content-length: %li\n", fsize);
+
+                    char header[length_header_size+1];
+                    snprintf(header, sizeof(header), "Content-length: %li\n", fsize);
+
                     write(client_desc, "HTTP/1.1 200 OK\n", 16);
-                    write(client_desc, "Content-length: 46\n", 19);
+                    write(client_desc, header, strlen(header));
                     write(client_desc, "Content-Type: text/html\n\n", 25);
-                    write(client_desc, "<html><body><H1>Hello world</H1></body></html>", 46);
+                    write(client_desc, body, strlen(body));
                 }
                 else {
                     write(client_desc, "HTTP/1.1 404 NOT FOUND\n", 16);

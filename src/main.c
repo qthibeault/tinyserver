@@ -48,7 +48,6 @@ int main(int argc, char* argv[])
     {
         char s[15];
         inet_ntop(client.ss_family, &((struct sockaddr_in*)&client)->sin_addr, s, sizeof s);
-        log_print(INFO, "Accepted connection from %s", s);
 
         if((pid = fork()) < 0) {
             log_print(ERROR, "could not fork");
@@ -56,6 +55,12 @@ int main(int argc, char* argv[])
         else {
             if (pid == 0) {
                 close(sock_desc);
+
+                char buffer[8096];
+                read(client_desc, buffer, 8097);
+                char* method = strtok(buffer, " ");
+                char* path = strtok(NULL, " ");
+                log_print(INFO, "%s request on path %s from %s", method, path, s);
                 
                 write(client_desc, "HTTP/1.1 200 OK\n", 16);
                 write(client_desc, "Content-length: 46\n", 19);

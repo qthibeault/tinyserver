@@ -63,17 +63,19 @@ int main(int argc, char* argv[])
                 char* path = strtok(NULL, " ");
                 log_print(INFO, "%s request on path %s from %s", method, path, s);
 
+                if (strlen(path) == 1) {
+                    path = "";
+                }
                 char *fname = malloc(sizeof(char) * (strlen(path) + 2));
                 strcat(strcpy(fname, "."), path);
+                
                 struct stat sb;
                 if (stat(fname, &sb) == 0 && S_ISDIR(sb.st_mode)) {
-                    fname = realloc(fname, sizeof(char) * (strlen(fname) + 11));
-                    strcat(fname, "index.html");
+                    fname = realloc(fname, sizeof(char) * (strlen(fname) + 12));
+                    strcat(fname, "/index.html");
                 }
-
-                log_print(INFO, "Attempting to serve file: %s", fname);
                 
-                if (access(fname, R_OK) == -1) {
+                if (access(fname, F_OK) != -1) {
                     write(client_desc, "HTTP/1.1 200 OK\n", 16);
                     write(client_desc, "Content-length: 46\n", 19);
                     write(client_desc, "Content-Type: text/html\n\n", 25);

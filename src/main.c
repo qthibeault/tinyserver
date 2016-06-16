@@ -61,12 +61,26 @@ int main(int argc, char* argv[])
                 char* method = strtok(buffer, " ");
                 char* path = strtok(NULL, " ");
                 log_print(INFO, "%s request on path %s from %s", method, path, s);
+
+                char *fname = malloc(sizeof(char) * (strlen(path) + 2));
+                strcat(strcpy(fname, "."), path);
+
+                log_print(INFO, "Attempting to serve file: %s", fname);
                 
-                write(client_desc, "HTTP/1.1 200 OK\n", 16);
-                write(client_desc, "Content-length: 46\n", 19);
-                write(client_desc, "Content-Type: text/html\n\n", 25);
-                write(client_desc, "<html><body><H1>Hello world</H1></body></html>", 46);
-                
+                if (access(fname, R_OK) == -1) {
+                    write(client_desc, "HTTP/1.1 200 OK\n", 16);
+                    write(client_desc, "Content-length: 46\n", 19);
+                    write(client_desc, "Content-Type: text/html\n\n", 25);
+                    write(client_desc, "<html><body><H1>Hello world</H1></body></html>", 46);
+                }
+                else {
+                    write(client_desc, "HTTP/1.1 404 NOT FOUND\n", 16);
+                    write(client_desc, "Content-length: 48\n", 19);
+                    write(client_desc, "Content-Type: text/html\n\n", 25);
+                    write(client_desc, "<html><body><H1>404 Not Found</H1></body></html>", 48);
+                }
+
+                free(fname);
                 exit(1);
             }
             else {
